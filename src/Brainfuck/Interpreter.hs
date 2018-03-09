@@ -14,8 +14,6 @@ import qualified Data.Char            as Char
 
 import           Control.Monad        (when)
 
-import           Control.Monad.Loops  (untilM_)
-
 import           Control.Monad.State  (MonadState, State)
 import qualified Control.Monad.State  as State
 

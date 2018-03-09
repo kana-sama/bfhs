@@ -26,7 +26,6 @@ library:
   source-dirs: src
   dependencies:
   - mtl
-  - monad-loops
   - megaparsec
 
 tests:
