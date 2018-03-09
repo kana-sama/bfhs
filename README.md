@@ -1,0 +1,5 @@
+# bfhs
+
+```bash
+$ stack test
+```
