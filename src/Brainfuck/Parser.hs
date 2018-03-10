@@ -2,15 +2,14 @@ module Brainfuck.Parser
   ( parse
   ) where
 
-import           Data.Void                  (Void)
+import           Data.Void            (Void)
 
-import           Control.Applicative        (many, (<|>))
+import           Control.Applicative  (many, (<|>))
 
-import           Text.Megaparsec            (Parsec, between, runParser)
-import           Text.Megaparsec.Char       (char)
-import           Text.Megaparsec.Char.Lexer (decimal)
+import           Text.Megaparsec      (Parsec, between, runParser)
+import           Text.Megaparsec.Char (char)
 
-import           Brainfuck.AST              (AST, Token (..))
+import           Brainfuck.AST        (AST, Token (..))
 
 type Parser = Parsec Void String
 
@@ -24,9 +23,7 @@ token = Increment <$  char '+'
     <|> MoveRight <$  char '>'
     <|> Output    <$  char '.'
     <|> Input     <$  char ','
-    <|> Loop      <$> between (char '[') (char ']') program
-  where
-    token c v = v <$ char c
+    <|> Loop      <$> (char '[' `between` char ']') program
 
 parse :: String -> AST
 parse source = case runParser program "" source of

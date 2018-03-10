@@ -1,7 +1,3 @@
-{-# LANGUAGE NamedFieldPuns  #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TemplateHaskell #-}
-
 module Brainfuck.Tape
   ( Tape
   , make
@@ -10,35 +6,23 @@ module Brainfuck.Tape
   , value
   ) where
 
+import           Data.Stream         (Stream (..))
+import qualified Data.Stream         as Stream
+
 import           Lens.Micro.Platform (Lens', lens)
 
-data Tape a = Tape
-  { tapeEmpty :: a
-  , tapeLeft  :: [a]
-  , tapeValue :: a
-  , tapeRight :: [a]
-  }
+data Tape a = Tape (Stream a) a (Stream a)
 
 value :: Lens' (Tape a) a
-value = lens tapeValue set where
-  set Tape{ tapeValue = _, .. } tapeValue = Tape{..}
+value = lens get set where
+  get (Tape _ v _) = v
+  set (Tape l _ r) v = Tape l v r
 
 make :: a -> Tape a
-make tapeEmpty = Tape{..} where
-  tapeLeft = []
-  tapeValue = tapeEmpty
-  tapeRight = []
+make e = Tape (Stream.repeat e) e (Stream.repeat e)
 
 moveLeft :: Tape a -> Tape a
-moveLeft tape = case tapeLeft tape of
-  []                   -> newTape{ tapeValue = tapeEmpty tape }
-  tapeValue : tapeLeft -> newTape{ tapeLeft, tapeValue }
-  where
-    newTape = tape{ tapeRight = tapeValue tape : tapeRight tape }
+moveLeft (Tape (l :<: ls) v rs) = Tape ls l (v :<: rs)
 
 moveRight :: Tape a -> Tape a
-moveRight tape = case tapeRight tape of
-  []                    -> newTape{ tapeValue = tapeEmpty tape }
-  tapeValue : tapeRight -> newTape{ tapeValue, tapeRight }
-  where
-    newTape = tape{ tapeLeft = tapeValue tape : tapeLeft tape }
+moveRight (Tape ls v (r :<: rs)) = Tape (v :<: ls) r rs

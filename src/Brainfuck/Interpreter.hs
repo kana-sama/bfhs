@@ -7,21 +7,17 @@ module Brainfuck.Interpreter
   ( execFromAST
   ) where
 
-import           Lens.Micro.Platform  (makeLenses, to, use, view, (%=), (+=),
-                                       (-=), (.=), (<~), _head, _tail)
+import           Lens.Micro.Platform  (makeLenses, use, view, (%=), (+=), (-=),
+                                       (.=))
 
-import qualified Data.Char            as Char
+import           Data.Char            (chr, ord)
 
 import           Control.Monad        (when)
-
-import           Control.Monad.State  (MonadState, State)
-import qualified Control.Monad.State  as State
-
-import           Control.Monad.Except (ExceptT, MonadError)
-import qualified Control.Monad.Except as Except
+import           Control.Monad.Except (ExceptT, MonadError, runExceptT,
+                                       throwError)
+import           Control.Monad.State  (MonadState, State, execState)
 
 import           Brainfuck.AST        (AST, Token (..))
-
 import           Brainfuck.Tape       (Tape, value)
 import qualified Brainfuck.Tape       as Tape
 
@@ -43,8 +39,8 @@ newtype Interpreter a = Interpreter (ExceptT InterpreterError (State Interpreter
 execInterpreter :: Interpreter a -> String -> String
 execInterpreter (Interpreter m) _input
   = view output
-  . flip State.execState InterpreterState{..}
-  . Except.runExceptT
+  . flip execState InterpreterState{..}
+  . runExceptT
   $ m
   where
     _tape = Tape.make 0
@@ -64,13 +60,13 @@ interpret (token:tokens) = run token >> interpret tokens where
       run (Loop ast)
   run Input      = do
     use input >>= \case
-      []   -> Except.throwError EndOfInput
+      []   -> throwError EndOfInput
       c:cs -> do
         input .= cs
-        tape.value .= Char.ord c
+        tape.value .= ord c
   run Output     = do
     code <- use $ tape.value
-    output %= (++ [Char.chr code])
+    output %= (++ [chr code])
 
 execFromAST :: String -> AST -> String
 execFromAST input = flip execInterpreter input . interpret
